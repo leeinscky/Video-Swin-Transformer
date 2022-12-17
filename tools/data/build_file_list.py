@@ -3,6 +3,9 @@ import glob
 import json
 import os.path as osp
 import random
+import sys 
+sys.path.append(osp.join(osp.dirname(osp.abspath(__file__)), '../../')) # add mmaction2 to system path
+import numpy as np
 
 from mmcv.runner import set_random_seed
 from tools.data.anno_txt2json import lines2dictlist
@@ -154,14 +157,29 @@ def build_file_list(splits, frame_info, shuffle=False):
             random.shuffle(rgb_list)
             random.shuffle(flow_list)
         return rgb_list, flow_list
+    # 原始逻辑
+    # train_rgb_list, train_flow_list = build_list(splits[0])
+    # test_rgb_list, test_flow_list = build_list(splits[1])
+    # return (train_rgb_list, test_rgb_list), (train_flow_list, test_flow_list)
 
+    # 修改后逻辑
+    # print('splits=', splits) # 发现只有train 和 val？
+    print('splits[0][0]=', splits[0][0]) # splits[0][0]= ('abseiling/_4YTwq0-73Y_000044_000054', 0)
+    print('splits[1][0]=', splits[1][0]) # splits[1][0]= ('abseiling/-3B32lodo2M_000059_000069', 0)
+    print('splits[2][0]=', splits[2][0]) # splits[2][0]= ('-3B32lodo2M_000059_000069', -1)
+    print('len(splits)=', len(splits)) # 3
     train_rgb_list, train_flow_list = build_list(splits[0])
-    test_rgb_list, test_flow_list = build_list(splits[1])
-    return (train_rgb_list, test_rgb_list), (train_flow_list, test_flow_list)
+    val_rgb_list, val_flow_list = build_list(splits[1])
+    test_rgb_list, test_flow_list = build_list(splits[2])
+    print("len-train_rgb_list:", len(train_rgb_list), "len-val_rgb_list:", len(val_rgb_list), "len-test_rgb_list:", len(test_rgb_list)) # len-train_rgb_list: 0 len-val_rgb_list: 400 len-test_rgb_list: 0
+    print("len-train_flow_list:", len(train_flow_list), "len-val_flow_list:", len(val_flow_list), "len-test_flow_list:", len(test_flow_list)) # len-train_flow_list: 0 len-val_flow_list: 400 len-test_flow_list: 0
+    # print('val_rgb_list=', val_rgb_list)
+    return (train_rgb_list, val_rgb_list, test_rgb_list), (train_flow_list, val_flow_list, test_flow_list)
 
 
 def main():
     args = parse_args()
+    print('args:', args)
 
     if args.seed is not None:
         print(f'Set random seed to {args.seed}')
@@ -215,9 +233,11 @@ def main():
             f"'mmit', 'mit', 'kinetics400', 'kinetics600', 'kinetics700', but "
             f'got {args.dataset}')
 
-    assert len(splits) == args.num_split
+    print('len(split)=', str(len(splits)), 'type(splits)=', type(splits), 'len(splits[0]=', len(splits[0]))
+    assert len(splits[0]) == args.num_split # splits = ((train_list, val_list, test_list), )  splits[0] = (train_list, val_list, test_list)
 
     out_path = args.out_root_path + args.dataset
+    print(f'Output path: {out_path}')
 
     if len(splits) > 1:
         for i, split in enumerate(splits):
@@ -240,8 +260,11 @@ def main():
                 with open(osp.join(out_path, val_name), 'w') as f:
                     json.dump(val_list, f)
     else:
+        # splits[0] = (train_list, val_list, test_list)
+        # print('splits[0]=', splits[0], 'type(splits[0])=', type(splits[0]), 'len(splits[0])=', len(splits[0]))
         lists = build_file_list(splits[0], frame_info, shuffle=args.shuffle)
-
+        print('len(lists)=', len(lists), 'type(lists)=', type(lists), 'len(lists[0])=', len(lists[0])) # len(lists)= 2 type(lists)= <class 'tuple'> len(lists[0])= 2
+        print('(np.array(list)).shape=', (np.array(lists)).shape) # (np.array(list)).shape= (2, 2)
         if args.subset == 'train':
             ind = 0
         elif args.subset == 'val':

@@ -374,16 +374,26 @@ def parse_kinetics_splits(level, dataset):
     csv_reader = csv.reader(open(train_file))
     next(csv_reader)
     train_list = [line_to_map(x) for x in csv_reader]
+    print(f'[tools/data/parse_file_list.py] Number of train samples: {len(train_list)}') # 400
 
     csv_reader = csv.reader(open(val_file))
     next(csv_reader)
     val_list = [line_to_map(x) for x in csv_reader]
+    print(f'[tools/data/parse_file_list.py] Number of val samples: {len(val_list)}') # 400
 
     csv_reader = csv.reader(open(test_file))
     next(csv_reader)
     test_list = [line_to_map(x, test=True) for x in csv_reader]
+    print('[tools/data/parse_file_list.py] test_list=', test_list)
+    print(f'[tools/data/parse_file_list.py] Number of test samples: {len(test_list)}') # 400
 
     splits = ((train_list, val_list, test_list), )
+    # splits is a tuple
+    print(f'[tools/data/parse_file_list.py] Number of splits: {len(splits)}') # 1
+    # splits[0] is train_list, val_list, test_list
+    print(f'[tools/data/parse_file_list.py] Number of train samples in splits: {len(splits[0])}') # 3
+    # splits[0][0] is train_list
+    print(f'[tools/data/parse_file_list.py] Number of train samples in splits: {len(splits[0][0])}') # 400
     return splits
 
 
